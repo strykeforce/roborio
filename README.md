@@ -1,6 +1,8 @@
 # Development Tools
 
-Tools and utilities.
+Tools and utilities for Stryke Force software developers.
+
+## Compiling
 
 You will need [Vagrant](https://www.vagrantup.com) installed. Vagrant is used to build as it will provision a virtual machine (VM) with the correct tools and dependencies.
 
@@ -41,3 +43,8 @@ A normal programming session looks like:
 4. Compile.
 5. Deploy the compiled executable to the robot for testing.
 6. When finished, suspend the Vagrant VM with `vagrant halt`.
+
+## Resources
+
+- WPILib C++ [documentation](http://first.wpi.edu/FRC/roborio/release/docs/cpp/)
+- navX MXP C++ Class Library for RoboRIO [documentation](http://www.kauailabs.com/public_files/navx-mxp/apidocs/c++/)
