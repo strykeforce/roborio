@@ -5,6 +5,7 @@ Vagrant.configure('2') do |config|
   config.vm.box = 'ubuntu/trusty64'
 
   config.vm.provider 'virtualbox' do |v|
+    v.name = 'tools'
     v.memory = 2048
     v.cpus = 3
   end
@@ -16,16 +17,15 @@ Vagrant.configure('2') do |config|
   config.vm.provision 'shell', inline: <<-SCRIPT
   GIT=/usr/bin/git
   ANSIBLE_REPO=https://github.com/strykeforce/ansible.git
+  ANSIBLE_VERSION=v16.0.1
   ANSIBLE_DIR=/opt/ansible
 
   [[ ! -x $GIT ]] && apt-get install -y git
 
-  if [[ -d $ANSIBLE_DIR/.git ]]; then
-    cd $ANSIBLE_DIR
-    $GIT pull -q
-  else
-    $GIT clone -q $ANSIBLE_REPO $ANSIBLE_DIR
-  fi
+  [[ ! -d $ANSIBLE_DIR ]] && $GIT clone -q $ANSIBLE_REPO $ANSIBLE_DIR
+
+  cd $ANSIBLE_DIR
+  $GIT checkout -q $ANSIBLE_VERSION
   SCRIPT
 
   config.vm.provision 'ansible_local' do |ansible|
