@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.2)
-project(Sentinel)
+project(tools)
 
 set(WPI_LIBS /opt/wpilib CACHE PATH "WPILib directory.")
 set(NAVX_LIBS /opt/navx CACHE PATH "NavX directory.")

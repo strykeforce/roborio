@@ -1,38 +1,43 @@
-#include <unistd.h>
+#include <chrono>
+#include <iostream>
+#include <thread>
+
 #include "AHRS.h"
 #include "WPILib.h"
-AHRS* gyro;
+
+/*
+ * This program is used to measure the frequency of NavX errors.
+ *
+ * It prints a stream of millisecond timestamps corresponding to the last good
+ * sensor read. Any errors noted by the NavX library are printed to standard
+ * output and are interleaved with the timestamps.
+ *
+ * Excessive SPI errors have been noted while running this when
+ * /etc/init.d/nilvrt is running so run `/etc/init.d/nilvrt stop` first.
+ *
+ * TIMESTAMP_PERIOD_MS = how often a timestamp is printed to standard output
+ * LOOP_SLEEP_MS = run loop wait period
+ */
+
+static constexpr double TIMESTAMP_PERIOD_MS = 10 / 1000;
+static constexpr auto LOOP_SLEEP_MS = std::chrono::milliseconds(1);
 
 class Robot : public SampleRobot {
  public:
-  Robot() { printf("Hello, World!\n"); }
-
   void OperatorControl() {
-    gyro = new AHRS(SPI::Port::kMXP, 500 * 1000, 66);
-    // gyro = new AHRS(SerialPort::Port::kMXP);
-    // int Error = 0;
-    while (true) {
-      printf("Raw Acceleration == <%f, %f, %f>\n", gyro->GetRawAccelX(),
-             gyro->GetRawAccelY(), gyro->GetRawAccelZ());
-      printf("Velocity         == <%f, %f, %f>\n", gyro->GetVelocityX(),
-             gyro->GetVelocityY(), gyro->GetVelocityZ());
-      printf("displacement     == <%f, %f, %f>\n", gyro->GetDisplacementX(),
-             gyro->GetDisplacementY(), gyro->GetDisplacementZ());
-      printf("Pitch            == %f\n", gyro->GetPitch());
-      printf("Roll             == %f\n", gyro->GetRoll());
-      float CurrentYaw = gyro->GetYaw();
-      printf("Yaw              == %f\n", CurrentYaw);
-      printf("Temp (C)         == %f\n", gyro->GetTempC());
-      printf("\n");
-#define NOISE 3
-#define GOAL 30
-      // if(!(GOAL + NOISE > CurrentYaw && CurrentYaw > GOAL - NOISE))
-      //	Error++;
-      // printf("Error == %i\n", Error);
-      // Wait(0.25);
-      usleep(25 * 1000);
+    AHRS gyro{SPI::Port::kMXP};
+    frc::Timer timer;
+    timer.Start();
+    while (IsEnabled()) {
+      if (timer.HasPeriodPassed(TIMESTAMP_PERIOD_MS)) {
+        std::cout << gyro.GetLastSensorTimestamp() << std::endl;
+      }
+      std::this_thread::sleep_for(LOOP_SLEEP_MS);
     }
   }
+
+  void RobotInit() {}
+  void Disabled() {}
 };
 
 START_ROBOT_CLASS(Robot)
