@@ -37,7 +37,12 @@ class Robot : public SampleRobot {
   }
 
   void RobotInit() {}
-  void Disabled() {}
+
+  void Disabled() {
+    while (IsDisabled()) {
+      std::this_thread::sleep_for(LOOP_SLEEP_MS);
+    }
+  }
 };
 
 START_ROBOT_CLASS(Robot)
