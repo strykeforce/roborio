@@ -24,8 +24,9 @@ static constexpr auto LOOP_SLEEP_MS = std::chrono::milliseconds(1);
 
 class Robot : public SampleRobot {
  public:
+  AHRS gyro{SPI::Port::kMXP};
+
   void OperatorControl() {
-    AHRS gyro{SPI::Port::kMXP};
     frc::Timer timer;
     timer.Start();
     while (IsEnabled()) {
