@@ -13,7 +13,7 @@
  * LOOP_SLEEP_MS = run loop wait period
  */
 
-static constexpr auto LOOP_SLEEP_MS = std::chrono::milliseconds(10);
+static constexpr auto LOOP_SLEEP_MS = std::chrono::milliseconds(20);
 
 class Robot : public SampleRobot {
  private:

@@ -8,6 +8,9 @@
 #include "serial/serial.h"
 #include "spdlog/spdlog.h"
 
+#include "parser.h"
+#include "sentence.h"
+
 Listener::Listener(std::string port, uint32_t speed)
     : port_{port},
       speed_{speed},
@@ -22,15 +25,19 @@ Listener::~Listener() {
   if (thread_.joinable()) thread_.join();
 }
 
-int Listener::GetMode() {
+Listener::Mode Listener::GetMode() {
   std::lock_guard<std::mutex> lock(mutex_);
   return mode_;
 }
 
-void Listener::Send(int azimuth_error, int range) {
+int Listener::GetAzimuthError() {
   std::lock_guard<std::mutex> lock(mutex_);
-  azimuth_error_ = azimuth_error;
-  range_ = range;
+  return azimuth_error_;
+}
+
+int Listener::GetRange() {
+  std::lock_guard<std::mutex> lock(mutex_);
+  return range_;
 }
 
 void Listener::Start() { thread_ = std::thread{&Listener::Run, this}; }
@@ -38,27 +45,28 @@ void Listener::Start() { thread_ = std::thread{&Listener::Run, this}; }
 void Listener::Run() {
   auto logger = spdlog::get("serial");
   logger->set_level(spdlog::level::debug);
-  serial::Timeout timeout{0, 5, 0, 0, 0};
+  serial::Timeout timeout{0, 50, 0, 0, 0};
   serial::Serial serial{port_, speed_, timeout};
   serial.flushInput();
+  deadeye::Parser parser;
   while (!stop_thread_) {
-    std::string mode = serial.read(1);
-    logger->debug("mode = {}", mode);
-    char command = mode[0];
+    std::string line = serial.readline();
+    deadeye::Sentence sentence;
+    parser.ParseText(sentence, line);
+    bool valid = sentence.Valid();
+    logger->trace(
+        "name = {}, valid = {}, parameters[0] = {}, parameters[1] = {}",
+        sentence.name, valid, sentence.parameters[0], sentence.parameters[1]);
+    if (!valid) {
+      logger->warn("sentence invalid");
+      continue;
+    }
+    int azimuth_error = std::stoi(sentence.parameters[0]);
+    int range = std::stoi(sentence.parameters[1]);
     {
       std::lock_guard<std::mutex> lock(mutex_);
-      switch (command) {
-        case 'B':
-          mode_ = kBoiler;
-          break;
-        case 'G':
-          mode_ = kGear;
-          break;
-        default:
-          logger->error("unrecognized mode = {}", command);
-      }
-      serial.write(std::to_string(azimuth_error_) + "," +
-                   std::to_string(range) + "\n");
+      azimuth_error_ = azimuth_error;
+      range_ = range;
     }
   }
   serial.close();
