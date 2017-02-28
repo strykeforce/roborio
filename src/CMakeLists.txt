@@ -4,11 +4,17 @@ include_directories(
 "${CMAKE_SOURCE_DIR}/vendor/link"
 )
 
+add_executable(dio-test dio_test.cc)
+target_link_libraries(dio-test wpi)
+
+add_executable(pwm-test dio_test.cc)
+target_link_libraries(pwm-test wpi)
+
 add_executable(navx-test navx_test.cc)
 target_link_libraries(navx-test navx_frc_cpp wpi)
 
 add_executable(servo-test servo_test.cc)
-target_link_libraries(servo-test navx_frc_cpp wpi)
+target_link_libraries(servo-test wpi)
 
 add_executable(serial-test
 serial_test.cc
