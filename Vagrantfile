@@ -1,16 +1,26 @@
 #
-# roborio-skel
+# roborio utils
 #
+hostname = 'roborio'
+
 Vagrant.configure('2') do |config|
   config.vm.box = 'ubuntu/trusty64'
+  config.vm.hostname = hostname
 
   config.vm.provider 'virtualbox' do |v|
-    v.name = 'tools'
+    v.name = hostname
     v.memory = 2048
-    v.cpus = 3
+    v.cpus = 4
+    v.customize ['modifyvm', :id, '--paravirtprovider', 'kvm']
   end
 
-  config.vm.network 'public_network'
+  config.vm.provider 'vmware_fusion' do |v, override|
+    override.vm.box = 'bento/ubuntu-16.04'
+    v.vmx['memsize'] = '2048'
+    v.vmx['numvcpus'] = '4'
+  end
+
+  # config.vm.network 'public_network'
 
   # We provision using ansible_local, bootstrap our ansible roles by
   # downloading them from our repo.
@@ -37,6 +47,5 @@ Vagrant.configure('2') do |config|
     }
     ansible.sudo = true
     ansible.verbose = false
-    ansible.raw_arguments = ['--vault-password-file=/vagrant/.vault_pw']
   end
 end
